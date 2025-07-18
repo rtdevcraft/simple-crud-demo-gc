@@ -42,6 +42,12 @@ jobs:
           workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/react-github-pool/providers/github-provider'
           service_account: 'github-actions-deployer@my-project-1502729769937.iam.gserviceaccount.com'
 
+      # DEBUG
+      - name: 'Debug GitHub Context'
+        run: |
+          echo "Verifying the repository name that will be sent to Google Cloud:"
+          echo "Repository Name from GitHub Context: ${{ github.repository }}"
+
       # Set up the gcloud CLI
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
