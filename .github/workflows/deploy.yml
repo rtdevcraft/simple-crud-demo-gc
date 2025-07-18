@@ -39,8 +39,8 @@ jobs:
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
-          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/react-github-pool/providers/github-provider' # Replace with your provider ID
-          service_account: 'my-project-1502729769937@appspot.gserviceaccount.com' # Replace with your service account email
+          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/react-github-pool/providers/github-provider'
+          service_account: 'github-actions-deployer@my-project-1502729769937.iam.gserviceaccount.com'
 
       # Set up the gcloud CLI
       - name: 'Set up Cloud SDK'
