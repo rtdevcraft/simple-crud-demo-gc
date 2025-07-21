@@ -1,6 +1,10 @@
+
 # 1. Builder Stage: Use a Chainguard image, which is designed to have zero known vulnerabilities.
-# This provides a secure environment for building the application.
 FROM cgr.dev/chainguard/node:latest AS builder
+
+# Declare a build-time argument for the DATABASE_URL.
+# This allows the `docker build` command to pass a value for it.
+ARG DATABASE_URL
 
 # Set the working directory
 WORKDIR /app
@@ -15,13 +19,10 @@ RUN \
   fi
 
 # Copy the rest of the source code and build the application
-# This copy is now more efficient because of the .dockerignore file.
 COPY . .
 RUN npm run build
 
 # 2. Runner Stage: Use a secure, minimal "distroless" image for production.
-# This remains the best practice for the final production artifact, ensuring the
-# smallest possible attack surface.
 FROM gcr.io/distroless/nodejs20-debian12 AS runner
 
 WORKDIR /app
@@ -30,7 +31,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Copy the built application from the builder stage.
-# The `nonroot` user is the default non-root user provided by the distroless image.
 COPY --from=builder --chown=nonroot:nonroot /app/public ./public
 COPY --from=builder --chown=nonroot:nonroot /app/.next/standalone ./
 COPY --from=builder --chown=nonroot:nonroot /app/.next/static ./.next/static
@@ -42,8 +42,9 @@ USER nonroot
 EXPOSE 3000
 
 # Set the host to 0.0.0.0 to accept connections from outside the container
-ENV PORT 3000
-ENV HOSTNAME 0.0.0.0
+# Using key=value format to avoid legacy warnings.
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # The command to start the application
 CMD ["server.js"]
