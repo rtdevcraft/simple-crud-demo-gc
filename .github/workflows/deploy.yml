@@ -41,6 +41,12 @@ jobs:
           workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/react-github-pool/providers/github-provider'
           service_account: 'github-actions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
+      # DEBUG
+      - name: 'Test Impersonation Permission'
+        run: |-
+          echo "Attempting to generate an access token for the service account..."
+          gcloud auth print-access-token --impersonate-service-account='github-actions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+
       # Set up the gcloud CLI
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
