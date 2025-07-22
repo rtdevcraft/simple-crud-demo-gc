@@ -11,7 +11,7 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: us-central1
   SERVICE_NAME: simple-crud-demo
-  GAR_LOCATION: us-central1
+  GAR_LOCATION: us-west4 #
   DB_CONNECTION_NAME: ${{ secrets.DB_CONNECTION_NAME }}
   DB_USER: ${{ secrets.DB_USER }}
   DB_PASS: ${{ secrets.DB_PASS }}
@@ -38,9 +38,9 @@ jobs:
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
-          # This line points to your new pool name and uses secrets.
-          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/react-github-pool-2/providers/github-provider'
-          service_account: 'github-actions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          # Alternative format: 'projects/${{ secrets.WIF_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/react-github-pool-2/providers/github-provider'
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
       # Set up the gcloud CLI
       - name: 'Set up Cloud SDK'
