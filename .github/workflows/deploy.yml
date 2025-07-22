@@ -11,8 +11,8 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: us-central1
   SERVICE_NAME: simple-crud-demo
-  GAR_LOCATION: us-central1 # Artifact Registry location
-  DB_CONNECTION_NAME: ${{ secrets.DB_CONNECTION_NAME }} # e.g., your-project:us-central1:your-instance
+  GAR_LOCATION: us-central1
+  DB_CONNECTION_NAME: ${{ secrets.DB_CONNECTION_NAME }}
   DB_USER: ${{ secrets.DB_USER }}
   DB_PASS: ${{ secrets.DB_PASS }}
   DB_NAME: ${{ secrets.DB_NAME }}
@@ -34,18 +34,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # DEBUG
+      - name: 'Debug Secrets'
+        run: |
+          echo "Verifying secrets used for authentication:"
+          echo "GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}"
+          echo "GCP_PROJECT_NUMBER: ${{ secrets.GCP_PROJECT_NUMBER }}"
+          echo "Service Account Email being used: github-actions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
+
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
           workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/react-github-pool/providers/github-provider'
           service_account: 'github-actions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
-
-      # DEBUG
-      - name: 'Test Impersonation Permission'
-        run: |-
-          echo "Attempting to generate an access token for the service account..."
-          gcloud auth print-access-token --impersonate-service-account='github-actions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
       # Set up the gcloud CLI
       - name: 'Set up Cloud SDK'
