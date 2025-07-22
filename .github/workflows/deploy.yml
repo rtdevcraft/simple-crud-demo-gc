@@ -34,20 +34,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # DEBUG
-      - name: 'Debug Secrets'
-        run: |
-          echo "Verifying secrets used for authentication:"
-          echo "GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}"
-          echo "GCP_PROJECT_NUMBER: ${{ secrets.GCP_PROJECT_NUMBER }}"
-          echo "Service Account Email being used: github-actions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
-
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
-          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/react-github-pool/providers/github-provider'
-          service_account: 'github-actions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: 'https://iam.googleapis.com/projects/1052006727194/locations/global/workloadIdentityPools/react-github-pool/providers/github-provider'
+
+          service_account: 'github-actions-deployer@my-project-1502729769937.iam.gserviceaccount.com'
 
       # Set up the gcloud CLI
       - name: 'Set up Cloud SDK'
