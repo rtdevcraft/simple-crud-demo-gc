@@ -34,6 +34,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # DEBUG
+      - name: 'Debug WIF Provider Value'
+        run: |
+          echo "WIF Provider from secret is: ${{ secrets.WIF_PROVIDER }}"
+
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
