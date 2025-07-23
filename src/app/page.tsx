@@ -1,5 +1,6 @@
 import { getTasks } from './actions'
 import TaskManager from './components/TaskManager'
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   // Fetch the data on the server using the Server Action.

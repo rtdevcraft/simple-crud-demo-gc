@@ -1,0 +1,30 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: simple-crud-demo
+  namespace: my-project-1502729769937
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/cloudsql-instances: my-project-1502729769937:us-central1:psqla
+    spec:
+      serviceAccountName: default
+      containers:
+        - image: us-west4-docker.pkg.dev/my-project-1502729769937/simple-crud-demo/simple-crud-demo:latest
+          env:
+            - name: DATABASE_URL
+              value: postgresql://$(CRUD_DEMO_DB_USER):$(CRUD_DEMO_DB_PASS)@/$(CRUD_DEMO_DB_NAME)?host=/cloudsql/my-project-1502729769937:us-central1:psqla
+          envFrom:
+            - secretRef:
+                name: CRUD_DEMO_DB_USER
+            - secretRef:
+                name: CRUD_DEMO_DB_PASS
+            - secretRef:
+                name: CRUD_DEMO_DB_NAME
+          resources:
+            limits:
+              memory: '512Mi'
+              cpu: '1'
+      containerConcurrency: '80'
+      timeoutSeconds: '300'

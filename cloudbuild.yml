@@ -1,0 +1,47 @@
+steps:
+  # Step 1: Install dependencies, start Cloud SQL proxy, and build the app
+  - name: 'node:20'
+    id: 'Install & Build'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Install Cloud SQL Auth Proxy
+        curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.0/cloud-sql-proxy.linux.amd64
+        chmod +x cloud-sql-proxy
+
+        # Start Proxy in Background
+        ./cloud-sql-proxy --structured-logs --port=5432 my-project-1502729769937:us-central1:psqla &
+
+        # Wait for proxy to be ready
+        sleep 5
+
+        # Install dependencies and build the app
+        npm ci
+        npm run build
+    env:
+      - 'DATABASE_URL=postgresql://$(CRUD_DEMO_DB_USER):$(CRUD_DEMO_DB_PASS)@127.0.0.1:5432/$(CRUD_DEMO_DB_NAME)'
+    secretEnv: ['CRUD_DEMO_DB_USER', 'CRUD_DEMO_DB_PASS', 'CRUD_DEMO_DB_NAME']
+
+  # Step 2: Build Docker image using prebuilt output (no need to build again in Docker)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Docker Image'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-west4-docker.pkg.dev/$PROJECT_ID/simple-crud-demo/simple-crud-demo:$BUILD_ID'
+      - '.'
+
+# Push image to Artifact Registry
+images:
+  - 'us-west4-docker.pkg.dev/$PROJECT_ID/simple-crud-demo/simple-crud-demo:$BUILD_ID'
+
+# Make database credentials available from Secret Manager
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/CRUD_DEMO_DB_USER/versions/latest
+      env: 'CRUD_DEMO_DB_USER'
+    - versionName: projects/$PROJECT_ID/secrets/CRUD_DEMO_DB_PASS/versions/latest
+      env: 'CRUD_DEMO_DB_PASS'
+    - versionName: projects/$PROJECT_ID/secrets/CRUD_DEMO_DB_NAME/versions/latest
+      env: 'CRUD_DEMO_DB_NAME'
