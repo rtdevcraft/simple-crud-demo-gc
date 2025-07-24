@@ -1,4 +1,4 @@
-import { auth } from '../../auth'
+import { auth } from '../../lib/auth'
 import { SignIn, SignOut } from './components/AuthButtons'
 import { Box, Typography, AppBar, Toolbar } from '@mui/material'
 

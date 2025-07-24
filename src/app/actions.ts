@@ -1,137 +1,61 @@
 'use server'
 
+import { auth } from '../../lib/auth'
+import prisma from '../../lib/db'
 import { revalidatePath } from 'next/cache'
-import pool from '../../lib/db'
-import { Task } from '../../lib/types'
-import { auth } from '../../auth'
 
-/**
- * Retrieves the current user's session and ID.
- * Throws an error if the user is not authenticated.
- * @returns {Promise<string>} The user's ID.
- */
-async function getUserId(): Promise<string> {
+// Helper: throw if not authenticated
+async function requireUserId() {
   const session = await auth()
-  const userId = session?.user?.id
-  if (!userId) {
-    // This error will be caught by the calling function's try/catch block.
-    throw new Error('You must be logged in to perform this action.')
+  if (!session?.session?.user?.id) {
+    throw new Error('User not authenticated')
   }
-  return userId
+  return session.session.user.id
 }
 
-/**
- * Fetches all tasks for the currently authenticated user.
- * @returns {Promise<Task[]>} A list of the user's tasks.
- */
-export async function getTasks(): Promise<Task[]> {
-  try {
-    const userId = await getUserId() //  Secure: Get user ID
-    const client = await pool.connect()
-    const result = await client.query(
-      //  Query is now filtered by the logged-in user
-      'SELECT * FROM tasks WHERE user_id = $1 ORDER BY created_at DESC',
-      [userId]
-    )
-    client.release()
-    return result.rows as Task[]
-  } catch (error) {
-    console.error('Failed to fetch tasks:', error)
-    // Return empty array if user is not logged in or if there's a DB error.
-    return []
-  }
+//  Fetch tasks for current user
+export async function getTasks() {
+  const userId = await requireUserId()
+
+  return await prisma.task.findMany({
+    where: { userId },
+    orderBy: { created_at: 'desc' },
+  })
 }
 
-/**
- * Adds a new task for the currently authenticated user.
- * @param {FormData} formData - The form data containing the task title.
- */
-export async function addTask(formData: FormData) {
-  const title = formData.get('title') as string
+//  Create a new task
+export async function createTask(title: string) {
+  const userId = await requireUserId()
 
-  if (!title) {
-    return { error: 'Title is required' }
-  }
-
-  try {
-    const userId = await getUserId() //  Secure: Get user ID
-    const client = await pool.connect()
-    //  Insert now includes the user_id
-    await client.query('INSERT INTO tasks (title, user_id) VALUES ($1, $2)', [
+  await prisma.task.create({
+    data: {
       title,
       userId,
-    ])
-    client.release()
+    },
+  })
 
-    revalidatePath('/')
-    return { success: true }
-  } catch (error) {
-    console.error('Failed to create task:', error)
-    return { error: 'Failed to create task' }
-  }
+  revalidatePath('/')
 }
 
-/**
- * Toggles the completion status of a task owned by the authenticated user.
- * @param {number} id - The ID of the task to toggle.
- * @param {boolean} completed - The current completion status of the task.
- */
+//  Toggle task completion
 export async function toggleTask(id: number, completed: boolean) {
-  try {
-    const userId = await getUserId() //  Secure: Get user ID
-    const client = await pool.connect()
-    //  The WHERE clause ensures a user can only update their own tasks
-    await client.query(
-      'UPDATE tasks SET completed = $1 WHERE id = $2 AND user_id = $3',
-      [!completed, id, userId]
-    )
-    client.release()
-    revalidatePath('/')
-  } catch (error) {
-    console.error('Failed to toggle task:', error)
-    return { error: 'Failed to toggle task' }
-  }
+  const userId = await requireUserId()
+
+  await prisma.task.update({
+    where: { id },
+    data: { completed },
+  })
+
+  revalidatePath('/')
 }
 
-/**
- * Deletes a task owned by the authenticated user.
- * @param {number} id - The ID of the task to delete.
- */
+//  Delete a task
 export async function deleteTask(id: number) {
-  try {
-    const userId = await getUserId() //  Secure: Get user ID
-    const client = await pool.connect()
-    //  The WHERE clause ensures a user can only delete their own tasks
-    await client.query('DELETE FROM tasks WHERE id = $1 AND user_id = $2', [
-      id,
-      userId,
-    ])
-    client.release()
-    revalidatePath('/')
-  } catch (error) {
-    console.error('Failed to delete task:', error)
-    return { error: 'Failed to delete task' }
-  }
-}
+  const userId = await requireUserId()
 
-/**
- * Updates the title of a task owned by the authenticated user.
- * @param {number} id - The ID of the task to update.
- * @param {string} newTitle - The new title for the task.
- */
-export async function updateTask(id: number, newTitle: string) {
-  try {
-    const userId = await getUserId() //  Secure: Get user ID
-    const client = await pool.connect()
-    //  The WHERE clause ensures a user can only update their own tasks
-    await client.query(
-      'UPDATE tasks SET title = $1 WHERE id = $2 AND user_id = $3',
-      [newTitle, id, userId]
-    )
-    client.release()
-    revalidatePath('/')
-  } catch (error) {
-    console.error('Failed to update task:', error)
-    return { error: 'Failed to update task' }
-  }
+  await prisma.task.delete({
+    where: { id },
+  })
+
+  revalidatePath('/')
 }

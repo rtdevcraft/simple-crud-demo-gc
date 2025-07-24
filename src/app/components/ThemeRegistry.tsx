@@ -1,12 +1,19 @@
 'use client'
-
-import { ThemeProvider, createTheme } from '@mui/material/styles'
+import * as React from 'react'
+import { createTheme, ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
-import React from 'react'
 
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
+
+    primary: {
+      main: '#90caf9',
+    },
+    background: {
+      default: '#121212', // Standard dark background
+      paper: '#1e1e1e', // A slightly lighter background for paper elements
+    },
   },
 })
 

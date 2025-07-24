@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      # These credentials must match the DATABASE_URL in your .env file
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    ports:
+      # Maps port 5432 on your host machine to port 5432 in the container
+      - '5432:5432'
+    volumes:
+      # Persists the database data on your local machine
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
