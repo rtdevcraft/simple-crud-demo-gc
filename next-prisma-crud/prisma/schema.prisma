@@ -64,7 +64,7 @@ model Task {
   title     String
   completed Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt // I've kept this field as it's useful for tracking updates
+  updatedAt DateTime @updatedAt 
 
   userId String @map("user_id") @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
