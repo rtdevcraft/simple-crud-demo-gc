@@ -1,48 +1,39 @@
-import { NextResponse as AnotherNextResponse } from 'next/server'
-import { getServerSession as getServerSessionForId } from 'next-auth'
-import { authOptions as idAuthOptions } from '../../../../lib/auth'
-import prismaForId from '../../../../lib/prisma'
+import { NextResponse as AnotherNextResponse } from 'next/server';
+import { getServerSession } from 'next-auth'; 
+import { authOptions } from '../../../../../lib/auth'; 
+import prisma from '../../../../../lib/prisma'; 
 
 // PUT /api/tasks/[id] - Updates a task owned by the user
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSessionForId(idAuthOptions)
+  const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    return AnotherNextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return AnotherNextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const { title, completed } = await request.json()
-    const taskId = Number(params.id)
+    const { title, completed } = await request.json();
+    const taskId = Number(params.id);
 
-    // Verify the task belongs to the user before updating
-    const task = await prismaForId.task.findFirst({
-      // CORRECTED: Use prisma import
-      where: { id: taskId, userId: session.user.id },
-    })
+    const task = await prisma.task.findFirst({
+        where: { id: taskId, userId: session.user.id }
+    });
 
     if (!task) {
-      return AnotherNextResponse.json(
-        { error: 'Task not found or you do not have permission' },
-        { status: 404 }
-      )
+        return AnotherNextResponse.json({ error: 'Task not found or you do not have permission' }, { status: 404 });
     }
 
-    const updatedTask = await prismaForId.task.update({
-      // CORRECTED: Use prisma import
+    const updatedTask = await prisma.task.update({
       where: { id: taskId },
       data: { title, completed },
-    })
-    return AnotherNextResponse.json(updatedTask)
+    });
+    return AnotherNextResponse.json(updatedTask);
   } catch (error) {
-    console.error('Failed to update task:', error)
-    return AnotherNextResponse.json(
-      { error: 'Failed to update task' },
-      { status: 500 }
-    )
+    console.error("Failed to update task:", error);
+    return AnotherNextResponse.json({ error: 'Failed to update task' }, { status: 500 });
   }
 }
 
@@ -51,38 +42,29 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSessionForId(idAuthOptions)
+  const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    return AnotherNextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return AnotherNextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const taskId = Number(params.id)
+    const taskId = Number(params.id);
 
-    // Verify the task belongs to the user before deleting
-    const task = await prismaForId.task.findFirst({
-      // CORRECTED: Use prisma import
-      where: { id: taskId, userId: session.user.id },
-    })
+    const task = await prisma.task.findFirst({
+        where: { id: taskId, userId: session.user.id }
+    });
 
     if (!task) {
-      return AnotherNextResponse.json(
-        { error: 'Task not found or you do not have permission' },
-        { status: 404 }
-      )
+        return AnotherNextResponse.json({ error: 'Task not found or you do not have permission' }, { status: 404 });
     }
 
-    await prismaForId.task.delete({
-      // CORRECTED: Use prisma import
+    await prisma.task.delete({
       where: { id: taskId },
-    })
-    return new AnotherNextResponse(null, { status: 204 }) // No Content
+    });
+    return new AnotherNextResponse(null, { status: 204 });
   } catch (error) {
-    console.error('Failed to delete task:', error)
-    return AnotherNextResponse.json(
-      { error: 'Failed to delete task' },
-      { status: 500 }
-    )
+    console.error("Failed to delete task:", error);
+    return AnotherNextResponse.json({ error: 'Failed to delete task' }, { status: 500 });
   }
 }
